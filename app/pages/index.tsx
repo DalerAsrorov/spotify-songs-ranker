@@ -1,17 +1,48 @@
-import Head from 'next/head';
-import { Blockquote, Box, Button, Em, Flex, Section, Text, TextField, Theme } from '@radix-ui/themes';
-import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { Blockquote, Box, Em, Flex, Popover, Section, TextField, Theme } from '@radix-ui/themes';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import '@radix-ui/themes/styles.css';
+import { useRef, useState } from 'react';
 
 const Search = (props: any) => {
+  const [hasOpenSuggestions, setHasOpenSugesstions] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const searchInputRef = useRef()
+
+  const handleInput = (event) => {
+    setSearchInput(event.target.value)
+
+    if (!event.target.value.length) {
+      setHasOpenSugesstions(false)
+    } else if (event.target.value.length === 1) {
+      setTimeout(() => {
+        event.target.focus()
+      })
+    }
+    if (!hasOpenSuggestions) {
+      setHasOpenSugesstions(true)
+    }
+  }
 
   return (
-    <TextField.Root>
-      <TextField.Slot>
-        <MagnifyingGlassIcon />
-      </TextField.Slot>
-      <TextField.Input placeholder="Search the docs…" />
-    </TextField.Root>
+    <>
+      <TextField.Root size='3' onInput={handleInput}>
+        <TextField.Slot color='jade'>
+          <MagnifyingGlassIcon />
+        </TextField.Slot>
+        <TextField.Input ref={searchInputRef} placeholder="Search for any artist" />
+      </TextField.Root>
+      <Popover.Root open={hasOpenSuggestions}>
+        <VisuallyHidden.Root>
+          <Popover.Trigger>
+            <button>Trigger</button>
+          </Popover.Trigger>
+        </VisuallyHidden.Root>
+        <Popover.Content side='bottom' alignOffset={5} sideOffset={25} style={{ width: '500px' }}>
+          <div>{searchInput}</div>
+        </Popover.Content>
+      </Popover.Root>
+    </>
   )
 }
 
@@ -24,7 +55,7 @@ export default function Home() {
           <Section size="1">
             <Flex direction='column' gap='2'>
               <Search />
-              <Blockquote>
+              <Blockquote color='jade'>
                 <Em>This search bar allows you to find an artist that you want to find the song stats about. Type any artist of your choice.</Em>
               </Blockquote>
             </Flex>
