@@ -5,18 +5,23 @@ import { Container, Heading, Popover, TextField } from '@radix-ui/themes'
 import '@radix-ui/themes/styles.css'
 import { useRef, useState } from 'react'
 import PulseLoader from 'react-spinners/PulseLoader'
+import { createHttpCall } from '../utils/http-call'
 
 export const Search = (props: any) => {
   const [hasOpenSuggestions, setHasOpenSugesstions] = useState(false)
+  const [isLoadingArtists, setIsLoadingArtists] = useState(false)
   const [searchInput, setSearchInput] = useState('')
   const searchInputRef = useRef()
 
   const handleInput = (event) => {
     setSearchInput(event.target.value)
+    setIsLoadingArtists(true)
 
     if (!event.target.value.length) {
       setHasOpenSugesstions(false)
+      setIsLoadingArtists(false)
     } else if (event.target.value.length === 1) {
+      // focus input back as soon as the popover renders
       setTimeout(() => {
         event.target.focus()
       })
@@ -24,6 +29,11 @@ export const Search = (props: any) => {
     if (!hasOpenSuggestions) {
       setHasOpenSugesstions(true)
     }
+
+    // todo: replace the mock call with an actual http call to get the matching artists
+    createHttpCall(null).then(() => {
+      setIsLoadingArtists(false)
+    })
   }
 
   return (
@@ -38,8 +48,8 @@ export const Search = (props: any) => {
         />
         <TextField.Slot>
           <PulseLoader
-            color={jade.jade1}
-            loading={true}
+            color={jade.jade7}
+            loading={isLoadingArtists}
             size={4}
             aria-label="loading spinner"
           />
