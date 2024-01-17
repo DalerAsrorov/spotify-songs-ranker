@@ -1,15 +1,26 @@
 import { Blockquote, Box, Em, Flex, Section, Theme } from '@radix-ui/themes'
 import '@radix-ui/themes/styles.css'
 import { Search } from '../components/Search'
+import { useEffect, useState } from 'react'
 
 export default function Home() {
+  const [token, setToken] = useState('')
+
+  useEffect(() => {
+    fetch('/api/token')
+      .then((response) => response.json())
+      .then((data) => {
+        setToken(data.access_token)
+      })
+  }, [])
+
   return (
     <div style={{ width: '95%', margin: '0 auto' }}>
       <Theme>
         <Flex direction="column" gap="3">
           <Section size="1">
             <Flex direction="column" gap="2">
-              <Search />
+              <Search token={token} />
               <Blockquote color="jade">
                 <Em>
                   This search bar allows you to find an artist that you want to
