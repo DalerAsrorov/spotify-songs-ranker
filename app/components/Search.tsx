@@ -1,21 +1,18 @@
 import { jade } from '@radix-ui/colors'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
-import {
-  Avatar,
-  Box,
-  Card,
-  Container,
-  Flex,
-  Heading,
-  Popover,
-  Text,
-  TextField,
-} from '@radix-ui/themes'
+import { Container, Flex, Heading, Popover, TextField } from '@radix-ui/themes'
 import '@radix-ui/themes/styles.css'
-import { useEffect, useRef, useState } from 'react'
+import {
+  KeyboardEvent,
+  RefObject,
+  createRef,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import PulseLoader from 'react-spinners/PulseLoader'
-import { createHttpCall } from '../utils/http-call'
+import { Card } from '../components/Card'
 import { useDebounce } from '../utils/debounce'
 
 const SPOTIFY_SEARCH_API = 'https://api.spotify.com/v1/search'
@@ -30,8 +27,8 @@ export const Search = (props: SearchProps) => {
   const [artists, setArtists] = useState([])
   const [searchInput, setSearchInput] = useState('')
   const debouncedSearch = useDebounce(searchInput, 500)
-  const searchInputRef = useRef()
-  const [refs, setRefs] = useState([])
+  const searchInputRef = useRef<HTMLInputElement>()
+  const [refs, setRefs] = useState<RefObject<HTMLDivElement>[]>([])
 
   const handleInput = (event) => {
     setSearchInput(event.target.value)
@@ -51,6 +48,21 @@ export const Search = (props: SearchProps) => {
     }
   }
 
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLDivElement & HTMLInputElement>,
+    index: number,
+  ) => {
+    if (e.key === 'ArrowUp' && (index === 0 || index === -1)) {
+      setTimeout(() => {
+        searchInputRef.current.focus()
+      })
+    } else if (e.key === 'ArrowDown') {
+      refs[index + 1].current.focus()
+    } else if (e.key === 'ArrowUp') {
+      refs[index - 1].current.focus()
+    }
+  }
+
   useEffect(() => {
     if (debouncedSearch.length === 0) {
       setArtists([])
@@ -65,13 +77,15 @@ export const Search = (props: SearchProps) => {
       )
         .then((response) => response.json())
         .then((data) => {
-          console.log('data', data)
-          setArtists(data.artists?.items ?? [])
+          const results = data.artists?.items
+          const refs: RefObject<HTMLDivElement>[] = results.map((_) =>
+            createRef<HTMLDivElement>(),
+          )
+          setRefs([...refs])
+          setArtists(results ?? [])
         })
     }
   }, [debouncedSearch])
-
-  console.log(artists)
 
   return (
     <>
@@ -81,7 +95,14 @@ export const Search = (props: SearchProps) => {
         </TextField.Slot>
         <TextField.Input
           ref={searchInputRef}
+          onKeyDown={(e) => handleKeyDown(e, -1)}
           placeholder="Search for any artist"
+          onFocus={(e) =>
+            e.currentTarget.setSelectionRange(
+              e.currentTarget.value.length,
+              e.currentTarget.value.length,
+            )
+          }
         />
         <TextField.Slot>
           <PulseLoader
@@ -109,38 +130,15 @@ export const Search = (props: SearchProps) => {
             <Heading color="mint" size="4" weight="regular">
               Search results that match &quot;{searchInput}&quot;
             </Heading>
-            <Container
-              onKeyDown={() => {
-                console.log('onKeyDown pressed:::')
-              }}
-            >
+            <Container>
               {artists.map((artist, index) => (
                 <Card
                   key={artist.id}
-                  size="3"
-                  variant="ghost"
-                  tabIndex={0}
-                  onClick={() => {
-                    console.log('clicked')
-                  }}
-                >
-                  <Flex gap="5" align="center">
-                    <Avatar
-                      size="3"
-                      src={artist.images?.[0]?.url}
-                      radius="full"
-                      fallback="T"
-                    />
-                    <Box>
-                      <Text as="div" size="2" weight="bold">
-                        {artist.name}
-                      </Text>
-                      <Text as="div" size="2" color="gray">
-                        {artist.followers?.total} followers
-                      </Text>
-                    </Box>
-                  </Flex>
-                </Card>
+                  artist={artist}
+                  index={index}
+                  onKeyDown={handleKeyDown}
+                  ref={refs[index]}
+                />
               ))}
             </Container>
           </Flex>

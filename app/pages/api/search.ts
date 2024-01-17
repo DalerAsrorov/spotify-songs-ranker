@@ -14,14 +14,11 @@ export default function handler(
     ` artist:${q}`,
   )}`
 
-  console.log({ apiPath, SPOTIFY_CLIENT_ID })
-
   fetch(apiPath, {
     headers: { Authorization: `Bearer ${SPOTIFY_CLIENT_ID}` },
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log('data', data)
       res.status(200).json(data)
     })
 }

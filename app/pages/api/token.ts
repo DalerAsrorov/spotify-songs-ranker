@@ -18,7 +18,6 @@ export default function handler(
     body: `grant_type=client_credentials&client_id=${SPOTIFY_CLIENT_ID}&client_secret=${SPOTIFY_CLIENT_SECRET_ID}`,
   }).then(async (response) => {
     const data = await response.json()
-    console.log('data', data)
     res.json(data)
   })
 }
